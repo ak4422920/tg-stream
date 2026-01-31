@@ -4,34 +4,36 @@ import uvicorn
 from fastapi import FastAPI, Response
 from telethon import TelegramClient
 from fastapi.responses import HTMLResponse
+from contextlib import asynccontextmanager
 
-# 1. Credentials - Integers for safety
-API_ID = int(os.getenv('API_ID'))
-API_HASH = os.getenv('API_HASH')
-BOT_TOKEN = os.getenv('BOT_TOKEN')
+# 1. Credentials - added a default '0' to prevent crash if empty
+API_ID = int(os.getenv('API_ID', 0))
+API_HASH = os.getenv('API_HASH', '')
+BOT_TOKEN = os.getenv('BOT_TOKEN', '')
 
-app = FastAPI()
-client = TelegramClient('bot_session', API_ID, API_HASH)
-
-@app.on_event("startup")
-async def startup():
+# --- Lifespan Logic (Modern FastAPI way) ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Bot start hone ka logic
     await client.start(bot_token=BOT_TOKEN)
+    print("✅ Bot Started Successfully!")
+    yield
+    # Bot band hone ka logic
+    await client.disconnect()
+
+app = FastAPI(lifespan=lifespan)
+client = TelegramClient('bot_session', API_ID, API_HASH)
 
 @app.get("/")
 async def home():
     html_content = """
     <html>
-        <head>
-            <title>My Streamer</title>
-            <style>
-                body { background: #000; color: #0f0; font-family: sans-serif; text-align: center; padding-top: 50px; }
-                video { width: 80%; border: 2px solid #0f0; border-radius: 10px; }
-            </style>
-        </head>
-        <body>
-            <h1>🎬 Bot is Live!</h1>
-            <video controls autoplay><source src="/stream" type="video/mp4"></video>
-            <p>Send a video to your bot to test.</p>
+        <body style="background:#000; color:#0f0; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; margin:0; font-family:sans-serif;">
+            <h1>🎬 Stream is Ready</h1>
+            <video width="80%" controls autoplay style="border:2px solid #0f0; border-radius:10px;">
+                <source src="/stream" type="video/mp4">
+            </video>
+            <p>Send a video to your bot to play it here.</p>
         </body>
     </html>
     """
@@ -47,8 +49,8 @@ async def stream_video():
             return Response(video_generator(), media_type="video/mp4")
     return {"error": "No video found"}
 
-# --- YE HAI MASTER TRICK ---
+# --- STRING FIX START ---
 if __name__ == "__main__":
-    # Koyeb automatically gives a PORT variable
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # Yahan 'main:app' (string) use kiya hai taaki crash na ho
+    uvicorn.run("main:app", host="0.0.0.0", port=port, log_level="info")
