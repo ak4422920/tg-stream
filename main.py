@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 API_ID = int(os.getenv('API_ID', 0))
 API_HASH = os.getenv('API_HASH', '')
 BOT_TOKEN = os.getenv('BOT_TOKEN', '')
-CHANNEL_ID = os.getenv('CHANNEL_ID', 'me')
+CHANNEL_ID = os.getenv('CHANNEL_ID', '-1003617955958')
 
 # --- Expanded Keyword List (Languages, Genres, Qualities) ---
 KEYWORDS = {
