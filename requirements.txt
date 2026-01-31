@@ -1,3 +1,6 @@
-telethon
 fastapi
 uvicorn
+telethon
+motor
+pymongo
+dnspython
